@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 16 14:22:47 2023
-
-@author: 14252
-"""
-
-
-
-# -*- coding: utf-8 -*-
 
 # Import Libraries
+
 from pandastable import Table, config
 import numpy as np
 import math
@@ -19,7 +11,7 @@ import plotly.express as px
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, askopenfile
 import pandas as pd
-pd.options.mode.chained_assignment = None
+#pd.options.mode.chained_assignment = None
 import re
 #
 
@@ -223,7 +215,7 @@ class StartPage(tk.Frame):
             HCD = ['b', 'b+H2O', 'b-H2O', 'b-NH3', 'y', 'y-H2O', 'y-NH3']
             ETD = ['c', 'z']
             EThcD = ['b', 'b+H2O', 'b-H2O', 'b-NH3','c', 'y', 'y-H2O', 'y-NH3', 'z']
-            UVPD = ['a', 'a-NH3', 'a+1', 'b', 'b+H2O', 'b-H2O', 'b-NH3', 'c', 'x', 'x+1', 'y', 'y-1', 'y-2', 'y-H2O', 'y-NH3', 'z']
+            UVPD = ['a', 'a-NH3', 'a+1', 'd', 'b', 'b+H2O', 'b-H2O', 'b-NH3', 'c', 'x', 'x+1', 'v', 'w', 'y', 'y-1', 'y-2', 'y-H2O', 'y-NH3', 'z']
 
             ion_types = []
 
@@ -413,16 +405,66 @@ class StartPage(tk.Frame):
                     ligand_fragment_dict['z'].append(i+1.991841 + j)
                     
             # Dictionary of lists for theoretical fragments with neutral losses
+            global neutral_loss_fragment_dict 
             neutral_loss_fragment_dict = {'a': [], 'a-NH3': [],
                                           'a+1': [],
+                                          'd':[],
                                           'b': [], 'b-NH3': [], 'b-H2O': [], 'b+H2O': [], 
                                           'c': [],
                                           'x': [], 
-                                          'x+1': [], 
+                                          'x+1': [],
+                                          'v':[], 'w':[],
                                           'y': [], 'y-NH3': [], 'y-H2O': [], 
                                           'y-1': [], 
                                           'y-2': [], 
                                           'z': []}
+            
+            # Dictionary for side chain losses of w ions
+            w_side_chain_loss_dict = {
+                'K': 57.05785,
+                'D': 43.98983,
+                'E': 58.00548,
+                'R': 85.06399,
+                'H': -43.00581, #Correct for 0 loss
+                'S': 15.99492,
+                'T': 15.99492,
+                'N': 43.00581,
+                'Q': 57.02146,
+                'C': 31.97207,
+                'G': -43.00581,  #Correct for 0 loss
+                'P': -43.00581, #Correct for 0 loss
+                'A': -43.00581, #Correct for 0 loss
+                'I': 28.03130,
+                'L': 42.04695,
+                'M': 60.00337,
+                'F': -43.00581, #Correct for 0 loss
+                'W': -43.00581, #Correct for 0 loss
+                'Y': -43.00581, #Correct for 0 loss
+                'V': 14.01565}
+                
+                # Dictionary for side chain losses of d ions
+            d_side_chain_loss_dict = {
+                    'K': 57.05785,
+                    'D': 43.98983,
+                    'E': 58.00548,
+                    'R': 85.06399,
+                    'H': 0, #Correct for 0 loss
+                    'S': 15.99492,
+                    'T': 15.99492,
+                    'N': 43.00581,
+                    'Q': 57.02146,
+                    'C': 31.97207,
+                    'G': 0,  #Correct for 0 loss
+                    'P': 0, #Correct for 0 loss
+                    'A': 0, #Correct for 0 loss
+                    'I': 28.03130,
+                    'L': 42.04695,
+                    'M': 60.00337,
+                    'F': 0, #Correct for 0 loss
+                    'W': 0, #Correct for 0 loss
+                    'Y': 0, #Correct for 0 loss
+                    'V': 14.01565}
+            
             
             # N-Term fragment list
             fragment_mass = 0
@@ -439,23 +481,35 @@ class StartPage(tk.Frame):
             for index, value in reversed(list(enumerate(mass_list))):
                 neutral_loss_C_term_fragment_list.append(fragment_mass)
                 fragment_mass += mass_list[index]
-
+            
             # Correct for Ligand mass
             for i in neutral_loss_N_term_fragment_list:
-
+                
+                    amino_acid = protein_aa_list[neutral_loss_N_term_fragment_list.index(i)-1]
+                    d_side_chain = d_side_chain_loss_dict[amino_acid]
+                    
+                                    
                     neutral_loss_fragment_dict['a'].append(i-27.9949)
                     neutral_loss_fragment_dict['a-NH3'].append(i-27.9949-17.0265)
                     neutral_loss_fragment_dict['a+1'].append(i-26.987075)
+                    neutral_loss_fragment_dict['d'].append(i-27.9949- d_side_chain) #a - partial side chain
                     neutral_loss_fragment_dict['b'].append(i)
                     neutral_loss_fragment_dict['b-NH3'].append(i-17.0265)
                     neutral_loss_fragment_dict['b-H2O'].append(i-18.0106)
                     neutral_loss_fragment_dict['b+H2O'].append(i+18.0106)
                     neutral_loss_fragment_dict['c'].append(i+17.026549)
 
-            for i in ligand_C_term_fragment_list:
-
+            for i in neutral_loss_C_term_fragment_list:
+                
+                    amino_acid = protein_aa_list[-(neutral_loss_C_term_fragment_list.index(i))]
+                    amino_acid_mass = AA_masses[amino_acid]
+                    side_chain = amino_acid_mass-56.04747
+                    w_side_chain = w_side_chain_loss_dict[amino_acid]
+                    
                     neutral_loss_fragment_dict['x'].append(i+43.989830)
                     neutral_loss_fragment_dict['x+1'].append(i+44.997655)
+                    neutral_loss_fragment_dict['v'].append(i+43.989830-side_chain-27.9949) # full side chain - CO
+                    neutral_loss_fragment_dict['w'].append(i+43.989830-w_side_chain-43.00581) #x - partial side chain - CHNO
                     neutral_loss_fragment_dict['y'].append(i+18.010565)
                     neutral_loss_fragment_dict['y-NH3'].append(i+18.010565-17.0265)
                     neutral_loss_fragment_dict['y-H2O'].append(i+18.0106-18.0106)
@@ -490,14 +544,60 @@ class StartPage(tk.Frame):
                 'Y': {'C': 9, 'H': 9, 'N': 1, 'O': 2, 'S': 0},
                 'V': {'C': 5, 'H': 9, 'N': 1, 'O': 1, 'S': 0},
             }
+            #Full side chain compositions for v ions
+            aa_side_chain_compositions = {
+                'A': {'C': 1, 'H': 3, 'N': 0, 'O': 0, 'S': 0},
+                'R': {'C': 4, 'H': 10, 'N': 3, 'O': 0, 'S': 0},
+                'N': {'C': 2, 'H': 4, 'N': 1, 'O': 1, 'S': 0},
+                'D': {'C': 2, 'H': 3, 'N': 0, 'O': 2, 'S': 0},
+                'C': {'C': 1, 'H': 3, 'N': 0, 'O': 0, 'S': 1},
+                'E': {'C': 3, 'H': 5, 'N': 0, 'O': 2, 'S': 0},
+                'Q': {'C': 3, 'H': 6, 'N': 1, 'O': 1, 'S': 0},
+                'G': {'C': 0, 'H': 1, 'N': 0, 'O': 0, 'S': 0},
+                'H': {'C': 4, 'H': 5, 'N': 2, 'O': 0, 'S': 0},
+                'I': {'C': 4, 'H': 9, 'N': 0, 'O': 0, 'S': 0},
+                'L': {'C': 4, 'H': 9, 'N': 0, 'O': 0, 'S': 0},
+                'K': {'C': 4, 'H': 10, 'N': 1, 'O': 0, 'S': 0},
+                'M': {'C': 3, 'H': 7, 'N': 0, 'O': 0, 'S': 1},
+                'F': {'C': 7, 'H': 7, 'N': 0, 'O': 0, 'S': 0},
+                'P': {'C': 3, 'H': 5, 'N': 0, 'O': 0, 'S': 0},
+                'S': {'C': 1, 'H': 3, 'N': 0, 'O': 1, 'S': 0},
+                'T': {'C': 2, 'H': 5, 'N': 0, 'O': 1, 'S': 0},
+                'W': {'C': 9, 'H': 8, 'N': 1, 'O': 0, 'S': 0},
+                'Y': {'C': 7, 'H': 7, 'N': 0, 'O': 1, 'S': 0},
+                'V': {'C': 3, 'H': 7, 'N': 0, 'O': 0, 'S': 0},
+            }
+            #Partial side chain losses for d and w ions
+            d_w_aa_side_chain_compositions = {
+                'A': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'R': {'C': 3, 'H': 7, 'N': 3, 'O': 0, 'S': 0},
+                'N': {'C': 1, 'H': 1, 'N': 1, 'O': 1, 'S': 0},
+                'D': {'C': 1, 'H': 0, 'N': 0, 'O': 2, 'S': 0},
+                'C': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 1},
+                'E': {'C': 2, 'H': 2, 'N': 0, 'O': 2, 'S': 0},
+                'Q': {'C': 2, 'H': 3, 'N': 1, 'O': 1, 'S': 0},
+                'G': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'H': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'I': {'C': 2, 'H': 4, 'N': 0, 'O': 0, 'S': 0},
+                'L': {'C': 3, 'H': 6, 'N': 0, 'O': 0, 'S': 0},
+                'K': {'C': 3, 'H': 7, 'N': 1, 'O': 0, 'S': 0},
+                'M': {'C': 2, 'H': 4, 'N': 0, 'O': 0, 'S': 1},
+                'F': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'P': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'S': {'C': 0, 'H': 0, 'N': 0, 'O': 1, 'S': 0},
+                'T': {'C': 0, 'H': 0, 'N': 0, 'O': 1, 'S': 0},
+                'W': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'Y': {'C': 0, 'H': 0, 'N': 0, 'O': 0, 'S': 0},
+                'V': {'C': 1, 'H': 2, 'N': 0, 'O': 0, 'S': 0},
+                }
             
             C, H, O, N, S = [], [], [], [], []
             
             for i in df.itertuples():
                 ion_type = i._1
                 
-                if ion_type == 'a' or ion_type == 'a+1' or ion_type == 'b' or ion_type == 'c' or \
-                    ion_type == 'a-NH3' or ion_type == 'b-H2O' or ion_type == 'b-H2O' or ion_type == 'b+H2O':
+                if ion_type == 'a' or ion_type == 'a+1' or ion_type == 'd' or ion_type == 'b' or ion_type == 'c' or \
+                    ion_type == 'a-NH3' or ion_type == 'b-H2O' or ion_type == 'b-H2O' or ion_type == 'b+H2O' or ion_type == 'b-NH3':
                         
                     seq = protein_sequence[:(i.position)]
                     
@@ -511,23 +611,31 @@ class StartPage(tk.Frame):
                     aa_composition = aa_compositions[aa]
                     for element, count in aa_composition.items():
                         peptide_composition[element] = peptide_composition.get(element, 0) + count
-                    
+                
+                
                 if ion_type == 'a':
                     peptide_composition['C'] += -1
                     peptide_composition['O'] += -1
-                    peptide_composition['H'] += 1
+                    peptide_composition['H'] += 0
                     peptide_composition['S'] += 0
                         
                 if ion_type == 'a+1':
                     peptide_composition['C'] += -1
                     peptide_composition['O'] += -1
-                    peptide_composition['H'] += 2
+                    peptide_composition['H'] += 1
                     peptide_composition['S'] += 0
+                    
+                if ion_type == 'd':  #a ion - partial side chain loss
+                    peptide_composition['C'] += -1 - d_w_aa_side_chain_compositions[aa]['C']
+                    peptide_composition['O'] += -1 - d_w_aa_side_chain_compositions[aa]['O']
+                    peptide_composition['H'] += 0 - d_w_aa_side_chain_compositions[aa]['H']
+                    peptide_composition['S'] += 0 - d_w_aa_side_chain_compositions[aa]['S']
+                    peptide_composition['N'] += - d_w_aa_side_chain_compositions[aa]['N']
                         
                 if ion_type == 'a-NH3':
                     peptide_composition['C'] += -1
                     peptide_composition['O'] += -1
-                    peptide_composition['H'] += 1
+                    peptide_composition['H'] += -3
                     peptide_composition['N'] += -1
                     peptide_composition['S'] += 0
                         
@@ -574,23 +682,37 @@ class StartPage(tk.Frame):
                     peptide_composition['O'] += 2
                     peptide_composition['H'] += 1
                     peptide_composition['S'] += 0
-                
+                    
+                if ion_type == 'v': #x+1 ion - full side chain - CO
+                    peptide_composition['C'] += 1 -1 - aa_side_chain_compositions[seq[0]]['C']
+                    peptide_composition['O'] += 2 -1 - aa_side_chain_compositions[seq[0]]['O']
+                    peptide_composition['H'] += 1 - 1 - aa_side_chain_compositions[seq[0]]['H']
+                    peptide_composition['S'] += 0 -aa_side_chain_compositions[seq[0]]['S']
+                    peptide_composition['N'] += -aa_side_chain_compositions[seq[0]]['N']
+            
+                if ion_type == 'w': #x ion - partial side chain - CHNO
+                    peptide_composition['C'] += 1 - 1 - d_w_aa_side_chain_compositions[seq[0]]['C']
+                    peptide_composition['O'] += 2 - 1- d_w_aa_side_chain_compositions[seq[0]]['O']
+                    peptide_composition['H'] += 0 - 1 - d_w_aa_side_chain_compositions[seq[0]]['H']
+                    peptide_composition['S'] += 0 - d_w_aa_side_chain_compositions[seq[0]]['S']
+                    peptide_composition['N'] += -1 - d_w_aa_side_chain_compositions[seq[0]]['N']
+            
                 if ion_type == 'y':
                     peptide_composition['C'] += 0
                     peptide_composition['O'] += 1
-                    peptide_composition['H'] += 3
+                    peptide_composition['H'] += 2
                     peptide_composition['S'] += 0
                 
                 if ion_type == 'y-H2O':
                     peptide_composition['C'] += 0
                     peptide_composition['O'] += 0
-                    peptide_composition['H'] += 1
+                    peptide_composition['H'] += 0
                     peptide_composition['S'] += 0
-                
+            
                 if ion_type == 'y-NH3':
                     peptide_composition['C'] += 0
                     peptide_composition['O'] += 1
-                    peptide_composition['H'] += 0
+                    peptide_composition['H'] += -1
                     peptide_composition['N'] += -1
                     peptide_composition['S'] += 0
                 
@@ -633,63 +755,61 @@ class StartPage(tk.Frame):
 
         def match_fragments(deconvoluted_masses, theoretical_fragments, ion_types, tic):
 
-            # Dictionary of lists for relevant data
+        
             fragment_matches = {'ion type': [], 'position': [], 'Raw Intensity': [], 'TIC adjusted': [],
                                 'Observed mass': [], 'Theoretical mass': [], 'ppm error': [], 'Relative Ion Number': [], 'N/C-term': []}
-            k = 0
-
-            # Iterrate through deconvoluted mass list
+        
+            ppm_diff = lambda x, y: abs(x - y) / x * 1e6
+        
+            ion_types_set = set(ion_types)
+            nc_term_conditions = {'a', 'a+1', 'd', 'b', 'c', 'a-NH3', 'b-H2O', 'b-H2O', 'b+H2O', 'b-NH3'}
+        
+            observed_masses, ion_types_list, positions = [], [], []
+            ppm_errors, theoretical_masses, raw_intensities = [], [], []
+            tic_adjusted, relative_ion_numbers, nc_terms = [], [], []
+        
             for i in deconvoluted_masses.itertuples():
-                # Iterrate through theoretical fragments
                 for key, value in theoretical_fragments.items():
-                    for j in value:
-                        # Ignore first theoretical fragment (i.e. values less than mass of amino acid)
-                        if j > 0:
-                            # Match fragments according to activation method
-                            if key in ion_types:
-                                # Match fragments according to user entered PPM error
-                                if abs(ppm_difference(i.Mass, j)) <= int(PPM_error):
-                                    fragment_matches['Observed mass'].append(
-                                        i.Mass)
-                                    fragment_matches['ion type'].append(key)
-                                    fragment_matches['position'].append(
-                                        theoretical_fragments[key].index(j))
-                                    fragment_matches['ppm error'].append(
-                                        ppm_difference(i.Mass, j))
-                                    fragment_matches['Theoretical mass'].append(
-                                        j)
-                                    fragment_matches['Raw Intensity'].append(
-                                        i.Intensity)
-                                    fragment_matches['TIC adjusted'].append(
-                                        (i.Intensity)/tic)
-                
-                                    # Create reference position for graphing
-                                    if fragment_matches['ion type'][k] == 'y' or fragment_matches['ion type'][k] == 'y-H2O' or fragment_matches['ion type'][k] == 'y-NH3' \
-                                            or fragment_matches['ion type'][k] == 'y-1' or fragment_matches['ion type'][k] == 'y-2' \
-                                            or fragment_matches['ion type'][k] == 'x' or fragment_matches['ion type'][k] == 'x+1' or fragment_matches['ion type'][k] == 'z':
-                                        fragment_matches['Relative Ion Number'].append(
-                                            len(protein_sequence)-theoretical_fragments[key].index(j))
-                                    else:
-                                        fragment_matches['Relative Ion Number'].append(
-                                            theoretical_fragments[key].index(j))
-                                        
-                                    # Assign N or C terminal fragment type for graphing
-                                    if key == 'a' or key == 'a+1' or key == 'b' or key == 'c' or key == 'a-NH3' or key == 'b-H2O' or key == 'b-H2O' or key == 'b+H2O':
-                                        fragment_matches['N/C-term'].append(
-                                            'N-terminal')
-                                    else:
-                                        fragment_matches['N/C-term'].append(
-                                            'C-terminal')
-                                    
-                                    k += 1
-
-            return (fragment_matches)
+                    mask = (np.array(value) > 0) & (key in ion_types_set) & (abs(ppm_diff(i.Mass, np.array(value))) <= int(PPM_error))
+        
+                    indices = np.where(mask)[0]
+                    observed_masses.extend([i.Mass] * len(indices))
+                    ion_types_list.extend([key] * len(indices))
+                    positions.extend(indices)
+                    ppm_errors.extend(ppm_diff(i.Mass, np.array(value))[mask])
+                    theoretical_masses.extend(np.array(value)[mask])
+                    raw_intensities.extend([i.Intensity] * len(indices))
+                    tic_adjusted.extend([i.Intensity / tic] * len(indices))
+        
+                    relative_ion_numbers.extend(
+                        [len(protein_sequence) - index if key in {'y', 'y-H2O', 'y-NH3', 'y-1', 'y-2', 'x', 'x+1', 'v', 'w', 'z'}
+                          else index for index in indices]
+                        )
+        
+                    nc_term = 'N-terminal' if key in nc_term_conditions else 'C-terminal'
+                    nc_terms.extend([nc_term] * len(indices))
+        
+            fragment_matches['Observed mass'].extend(observed_masses)
+            fragment_matches['ion type'].extend(ion_types_list)
+            fragment_matches['position'].extend(positions)
+            fragment_matches['ppm error'].extend(ppm_errors)
+            fragment_matches['Theoretical mass'].extend(theoretical_masses)
+            fragment_matches['Raw Intensity'].extend(raw_intensities)
+            fragment_matches['TIC adjusted'].extend(tic_adjusted)
+            fragment_matches['Relative Ion Number'].extend(relative_ion_numbers)
+            fragment_matches['N/C-term'].extend(nc_terms)
+        
+            return fragment_matches
+            
 
         def find_seq_coverage(df, seq):
 
             # Calculate sequence coverage
             unique = df['Relative Ion Number'].nunique()
             seq_coverage = (unique/(len(seq)-1)*100)
+            
+            if seq_coverage > 100:
+                seq_coverage= 100
 
             return round(seq_coverage)
 
@@ -698,49 +818,41 @@ class StartPage(tk.Frame):
             # Calculate Fragments Explained
             frags_explained = (len(matching_fragments) /
                                len(deconvoluted_masses))*100
+            if frags_explained > 100:
+                frags_explained = 100
 
             return round(frags_explained)
 
         def fragment_abundance_plot(df, protein_sequence):
 
+            # Color mapping
+            color_map = {'a': '#B4D496', 'a+1': '#B4D496', 'a-NH3': '#B4D496',
+                         'b': '#A0BEEE', 'b-NH3': '#A0BEEE', 'b-H2O': '#A0BEEE', 'b+H2O': '#A0BEEE',
+                         'c': '#FF8A8A', 'x': '#00B050', 'x+1': '#00B050',
+                         'y': '#3764AA', 'y-1': '#3764AA', 'y-2': '#3764AA', 'y-NH3': '#3764AA', 'y-H2O': '#3764AA',
+                         'z': '#C00000', 'd': '#35E3E3', 'v': '#35E3E3', 'w': '#35E3E3'}
+        
             fig = px.bar(df, x='Relative Ion Number', y='TIC adjusted Intensity', color='ion type',
-
-                     category_orders={'ion type': [
-                         'a', 'a+1', 'a-NH3', 'b', 'b-H2O', 'b-NH3', 'b+H2O', 'c', 'x', 'x+1', 'y', 'y-1', 'y-2', 'y-NH3', 'y-H2O','z']},
-
-                         hover_data={'ion type': True, 'Ion Number': True,
-                             'Relative Ion Number': False, 'TIC adjusted Intensity': True},
-
-                         color_discrete_map={'a': '#B4D496', 'a+1': '#B4D496', 'a-NH3': '#B4D496',
-                                         'b': '#A0BEEE', 'b-NH3': '#A0BEEE', 'b-H2O': '#A0BEEE', 'b+H2O': '#A0BEEE',
-                                         'c': '#FF8A8A',
-                                         'x': '#00B050', 'x+1': '#00B050',
-                                         'y': '#3764AA', 'y-1': '#3764AA', 'y-2': '#3764AA', 'y-NH3': '#3764AA', 'y-H2O': '#3764AA',
-                                         'z': '#C00000'},
-
+                         category_orders={'ion type': list(color_map.keys())},
+                         hover_data={'ion type': True, 'Ion Number': True, 'TIC adjusted Intensity': True},
+                         color_discrete_map=color_map,
                          labels={'TIC adjusted Intensity': 'Relative Intensity', 'Relative Ion Number': 'Backbone Position'})
-
+        
             # Format Plot
             fig.update_xaxes(showline=True, linewidth=2, linecolor='black',
-                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40))
-            fig.update_xaxes(range=[0, len(protein_sequence)])
+                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40), range=[0, len(protein_sequence)])
             fig.update_yaxes(showline=True, linewidth=2, linecolor='black',
-                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40), showticklabels= True)
-            fig.update_layout(title_font_family='Arial', title_x=0.5, title_font=dict(
-                size=40), legend_font=dict(size=40))
-            fig.update_layout(template='seaborn', plot_bgcolor = 'white')
-            fig.update_traces(marker=dict(
-                pattern_solidity=0.4, pattern_fgcolor='black'))
-            newnames = {'a': 'a', 'a+1': 'a+1         ', 'a-NH3': 'a-NH3', 
-                        'b': 'b', 'b-NH3':'b-NH3', 'b-H2O': 'b-H2O', 'b+H2O': 'b+H2O',
-                        'c': 'c',
-                        'x': 'x', 'x+1': 'x+1', 
-                        'y': 'y', 'y-1': 'y-1', 'y-2': 'y-2', 'y-H2O': 'y-H2O', 'y-NH3': 'y-NH3',
-                        'z': 'z'}
-            fig.for_each_trace(lambda t: t.update(name=newnames[t.name]))
+                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40), showticklabels=True)
+            
+            # Combine layout updates
+            fig.update_layout(title_font_family='Arial', title_x=0.5, title_font=dict(size=40),
+                              legend_font=dict(size=40), template='seaborn', plot_bgcolor='white')
+            
+            # Combine trace modifications
+            fig.for_each_trace(lambda t: t.update(name=f"{t.name}         "))
             fig.data = fig.data[::-1]
             fig.layout.legend.traceorder = 'reversed'
-
+        
             return fig
 
         def fragment_abundance_plot_NC_term(df, protein_sequence):
@@ -759,16 +871,16 @@ class StartPage(tk.Frame):
 
             # Format Plot
             fig.update_xaxes(showline=True, linewidth=2, linecolor='black',
-                             mirror=True, title_font=dict(size=25), tickfont=dict(size=25))
-            fig.update_xaxes(range=[0, len(protein_sequence)])
+                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40), range=[0, len(protein_sequence)])
             fig.update_yaxes(showline=True, linewidth=2, linecolor='black',
-                             mirror=True, title_font=dict(size=25), tickfont=dict(size=25))
-            fig.update_layout(title_font_family='Arial', title_x=0.5, title_font=dict(
-                size=22), legend_font=dict(size=25))
-            fig.update_layout(template='seaborn')
-            fig.update_traces(marker=dict(
-                pattern_solidity=0.4, pattern_fgcolor='black'))
-
+                             mirror=True, title_font=dict(size=40), tickfont=dict(size=40), showticklabels=True)
+            
+            # Combine layout updates
+            fig.update_layout(title_font_family='Arial', title_x=0.5, title_font=dict(size=40),
+                              legend_font=dict(size=40), template='seaborn', plot_bgcolor='white')
+            
+            # Combine trace modifications
+            fig.for_each_trace(lambda t: t.update(name=f"{t.name}         "))
             fig.data = fig.data[::-1]
             fig.layout.legend.traceorder = 'reversed'
 
@@ -785,7 +897,6 @@ class StartPage(tk.Frame):
             return Results
 
         def sequence_coverage_plot(protein_sequence, matching_fragments):
-            
             # Separate protein into list
             protein_aa_list = ['<b>' + aa + '<b>' for aa in protein_sequence]
             
@@ -810,8 +921,7 @@ class StartPage(tk.Frame):
             y_max = coordinates['y'].max()
             y_min = coordinates['y'].min()
             
-            font_size = 40
-            
+            font_size = 44-y_max*1.5
             trace_data = []
             
             protein_sequence_trace = go.Scatter(
@@ -831,41 +941,30 @@ class StartPage(tk.Frame):
 
         ###############################################################################
 
+            keys = ['a+1', 'a', 'a-NH3', 'b', 'b-NH3', 'b-H2O', 'b+H2O', 'c', 'x', 'x+1', 'y', 'y-NH3', 'y-H2O', 'y-1', 'y-2', 'z', 'd', 'v', 'w']
             
-            keys = ['a+1','a','a-NH3','b','b-NH3', 'b-H2O', 'b+H2O', 'c','x','x+1','y', 'y-NH3', 'y-H2O','y-1','y-2','z']
-
-            ion_dict = {f'{i}' : {'ion type': [], 'ion mass': [], 'backbone position': [],
-                          'ion location x': [], 'ion location y': []}for i in keys}
-        
-            for row in matching_fragments.itertuples():
-
+            ion_dict = {i: {'ion type': [], 'ion mass': [], 'backbone position': [], 'ion location x': [], 'ion location y': []} for i in keys}
+            
+            key_set = set(keys)
+            
+            for index, row in enumerate(matching_fragments.itertuples()):
                 for i in coordinates.itertuples():
-                    
-                    for key in ion_dict.keys():
+                    key = row._1
+                    if key in key_set:
+                        if (i.Index + 1) == row._8:
+                            ion_type = ion_dict[key]
+                            ion_type['ion type'].append(key)
+                            ion_type['ion mass'].append(row._5)
+                            ion_type['ion location x'].append(coordinates['x'][i.Index])
+                            ion_type['ion location y'].append(coordinates['y'][i.Index])
+                            if key in ['a+1', 'a', 'a-NH3', 'b', 'b-NH3', 'b-H2O', 'b+H2O', 'c']:
+                                ion_type['backbone position'].append(row._8)
+                            else:
+                                ion_type['backbone position'].append(row._2)
 
-                        if row._1 == key:
-
-                            if (i.Index+1) == row._8:
-
-                                ion_dict[key]['ion type'].append(row._1) 
-                                
-                                ion_dict[key]['ion mass'].append(row._5)
-                                
-                                ion_dict[key]['ion location x'].append(coordinates['x'][i.Index])
-                                
-                                ion_dict[key]['ion location y'].append(coordinates['y'][i.Index])
-                                
-                                if key in ['a+1','a','a-NH3','b','b-NH3', 'b-H2O', 'b+H2O','c']:
                                     
-                                    ion_dict[key]['backbone position'].append(row._8)
-                                
-                                else:
-                                    
-                                    ion_dict[key]['backbone position'].append(row._2)
-                                    
-
             ###############################################################################
-  
+            global ion_df_dict
             ion_df_dict = {f'{i}' : pd.DataFrame() for i in keys}
             
             for k,v in ion_df_dict.items():
@@ -875,87 +974,106 @@ class StartPage(tk.Frame):
                     v['ion mass'] = ion_dict[k]['ion mass']
 
             ###############################################################################
-                    
+            color_dict = {'a': '#008000', 'a+1': '#008000', 'a-NH3': '#008000','x': '#008000', 'x+1': '#008000',
+                          'b': '#0000FF', 'b-NH3': '#0000FF','b-H2O': '#0000FF', 'b+H2O': '#0000FF',
+                          'y': '#0000FF', 'y-NH3': '#0000FF', 'y-H2O': '#0000FF','y-1': '#0000FF', 'y-2': '#0000FF',
+                          'c': '#FF0000', 'z': '#FF0000','d': '#35E3E3', 'v': '#35E3E3', 'w': '#35E3E3'}
             
             for i in keys[::-1]:
                 
-                         
-                color_dict = {'a': '#008000', 'a+1': '#008000', 'a-NH3': '#008000','x': '#008000', 'x+1': '#008000',
-                              'b': '#0000FF', 'b-NH3': '#0000FF','b-H2O': '#0000FF', 'b+H2O': '#0000FF',
-                              'y': '#0000FF', 'y-NH3': '#0000FF', 'y-H2O': '#0000FF','y-1': '#0000FF', 'y-2': '#0000FF',
-                              'c': '#FF0000', 'z': '#FF0000'}
-            
-                trace = (go.Scatter(
-                    x = [float(k) + 0.5 for k in ion_dict[i]['ion location x']],
-                    y = [float(l) + 0.05 for l in ion_dict[i]['ion location y']],
-                    mode = 'markers',
-                    name = i,
-                    marker = dict(
-                        symbol = 'line-ns',
-                        color = color_dict[i],
-                        size = font_size*0.8,
-                        line = dict(
-                            color = color_dict[i],
-                            width = 8)),
-                    hoverinfo = 'skip'
-                    ))
                 
-                trace_data.append(trace)
-                
-                if i in ['a','a+1','a-NH3','x','x+1']:
-                    angle = 0
-                    if i in ['a','a+1']:
-                        flag_x_scale = -0.062
-                        flag_y_scale = 0.36
-                    if i in ['x','x+1']:
-                        flag_x_scale = 0.062 
-                        flag_y_scale = -0.26
+                if i in ['a','a+1','a-NH3','b','b-NH3','b-H2O','b+H2O','c','d']:
+                    x_data = [item + increment for item in  ion_dict[i]['ion location x'] for increment in [0.5, 0.5, 0]]
+                    y_data = [item + increment for item in  ion_dict[i]['ion location y'] for increment in [0,0.2,0.4]]
                     
-                if i in ['b','b-NH3', 'b-H2O', 'b+H2O','y','y-NH3', 'y-H2O','y-1','y-2']:
-                    angle = 30
-                    if i in ['b']:
-                        flag_x_scale = -0.07
-                        flag_y_scale = 0.42
-                    if i in ['y','y-1','y-2']:
-                        flag_x_scale = 0.07
-                        flag_y_scale = -0.32
+                else:
+                    x_data = [item + increment for item in  ion_dict[i]['ion location x'] for increment in [0.5, 0.5, 1.0]]
+                    y_data = [item + increment for item in  ion_dict[i]['ion location y'] for increment in [0,-0.2,-0.4]]
+
+                for k in range(0, len(x_data),3):
+                    x = x_data[k:k+3]
+                    y = y_data[k:k+3]
+                    
+                    trace = (go.Scatter(
+                        x = x,
+                        y = y,
+                        mode = 'markers',
+                        name = i,
+                        marker = dict(
+                            color = 'rgba(0, 0, 255, 0)',
+                            size = 10),
+                        hoverinfo = 'skip'))
+                
+                    line_trace = (go.Scatter(
+                        x = x,
+                        y = y,
+                        mode = 'lines',
+                        line = dict(color = 'rgba(183, 183, 183, 0.8)',
+                                width = 10-y_max*0.5),
+                        hoverinfo = 'skip'))
+                    
+                    trace_data.append(trace)
+                    trace_data.append(line_trace)
+            
+            
+            for i in keys[::-1]:
+                
+                    
+                    if i in ['a','a+1','a-NH3','b','b-NH3','b-H2O','b+H2O','c','d']:
+                        x_data = [item + increment for item in  ion_dict[i]['ion location x'] for increment in [0.5, 0.5, 0]]
+                        y_data = [item + increment for item in  ion_dict[i]['ion location y'] for increment in [0,0.2,0.4]]
                         
-        
-                if i in ['c','z']:
-                    angle = 60
-                    if i in ['c']:
-                        flag_x_scale = -0.055
-                        flag_y_scale = 0.5
-                    if i in ['z']:
-                        flag_x_scale = 0.055
-                        flag_y_scale = -0.4
+                    else:
+                        x_data = [item + increment for item in  ion_dict[i]['ion location x'] for increment in [0.5, 0.5, 1.0]]
+                        y_data = [item + increment for item in  ion_dict[i]['ion location y'] for increment in [0,-0.2,-0.4]]
+                        
+                    x_scale = y_scale = 0.0  # Default values for cases not covered in conditions
+                    
+                    if i in ['a', 'a+1', 'a-NH3']:
+                        y_scale = 0.2
+                    elif i in ['b', 'b-NH3', 'b-H2O', 'b+H2O']:
+                        x_scale, y_scale = -0.167, 0.266
+                    elif i == 'c':
+                        x_scale, y_scale = -0.333, 0.332
+                    elif i == 'd':
+                        x_scale, y_scale = -0.5, 0.4
+                    elif i in ['x', 'x+1']:
+                        y_scale = -0.2
+                    elif i in ['y', 'y-NH3', 'y-H2O', 'y-1', 'y-2']:
+                        x_scale, y_scale = 0.167, -0.266
+                    elif i == 'z':
+                        x_scale, y_scale = 0.333, -0.332
+                    elif i in ['v', 'w']:
+                        x_scale, y_scale = 0.5, -0.4
+
+                    for k in range(0, len(x_data),3):
+                        count = int(k/3)
+                        x = x_data[k:k+3]
+                        y = y_data[k:k+3]
                 
-                
-                trace2 = (go.Scatter(
-                    x = [float(k) + 0.5 + flag_x_scale for k in ion_dict[i]['ion location x']],
-                    y = [float(l) + flag_y_scale for l in ion_dict[i]['ion location y']],
-                    mode = 'markers',
-                    name = i,
-                    marker = dict(
-                        symbol = 'line-ew',
-                        color = color_dict[i],
-                        angle = angle,
-                        size = font_size*0.3,
-                        line = dict(
+                        point_trace = (go.Scatter(
+                        x =[x[0]+x_scale],
+                        y = [y[0]+y_scale],
+                        mode = 'markers',
+                        name = i,
+                        marker = dict(
+                            symbol = 'circle',
                             color = color_dict[i],
-                            width = 8)),
-                    customdata = np.stack(
-                        (ion_df_dict[i]['ion type'], ion_df_dict[i]['ion position'], ion_df_dict[i]['ion mass']), axis = 1),
-                    hovertemplate = ('Ion Type: %{customdata[0]}<br>' +
-                                    'Ion Number: %{customdata[1]}<br>' +
-                                    'Ion Mass: %{customdata[2]}<br><extra></extra>'),
-                    hovertext = [(ion_dict[i]['ion type'][j], ion_dict[i]['backbone position'][j],
-                                  ion_dict[i]['ion mass'][j]) for j in range(len(ion_dict[i]['ion type']))],
-                    hoverinfo = 'text'
-                    ))
-                
-                trace_data.append(trace2)
-               
+                            size = font_size*0.1,
+                            line = dict(
+                                color = color_dict[i],
+                                width = 8)),
+                        customdata = [(ion_df_dict[i]['ion type'][count], ion_df_dict[i]['ion position'][count], ion_df_dict[i]['ion mass'][count])],
+                        hovertemplate = ('Ion Type: %{customdata[0]}<br>' +
+                                        'Ion Number: %{customdata[1]}<br>' +
+                                        'Ion Mass: %{customdata[2]}<br><extra></extra>'),
+                        hovertext = [(ion_dict[i]['ion type'][count], ion_dict[i]['backbone position'][count],
+                                      ion_dict[i]['ion mass'][count])],
+                        hoverinfo = 'text')
+                        )
+                    
+                        trace_data.append(point_trace)
+                   
                 
             fig = go.Figure(data = trace_data)
             
@@ -967,16 +1085,14 @@ class StartPage(tk.Frame):
             
             color_count = 0
             
-            PTM_colors = {"FF0000" : 42.01, "0000FF": 79.96 }
-            
-            
+
             for i,row in coordinates.iterrows():
                 if (i+1) in PTM_position_list:
                              
                     fig.add_shape(type = 'rect',
                                       xref = 'x', yref = 'y',
-                                      x0 = coordinates['x'][i] - 0.3, y0 = coordinates['y'][i] + 0.4,
-                                      x1 = coordinates['x'][i] + 0.3, y1 = coordinates['y'][i] - 0.3,
+                                      x0 = coordinates['x'][i] - 0.3, y0 = coordinates['y'][i] + 0.15,
+                                      x1 = coordinates['x'][i] + 0.3, y1 = coordinates['y'][i] - 0.15,
                                       line = dict(color = '#000000',
                                                   width = 3,
                                                   ), fillcolor = px.colors.qualitative.Plotly[color_count])
@@ -987,12 +1103,12 @@ class StartPage(tk.Frame):
      
             fig.update_layout(template='simple_white',
                               showlegend = False,
-                              yaxis = dict(range = [y_max-12,y_max+0.8]),
-                              xaxis = dict(range = [0,26]))
+                               yaxis = dict(range = [y_min-(y_max*0.2),y_max*1.2]),
+                               xaxis = dict(range = [0,26]))
             fig.update_xaxes(ticks='', showticklabels=False, showline=False)
             fig.update_yaxes(ticks='', showticklabels=False, showline=False)
             
-
+            
             return fig
 
         def get_variables():
@@ -1009,27 +1125,32 @@ class StartPage(tk.Frame):
             PPM_error = PPM_var.get()
 
             return seq, tic2, activation, PTM_position, PTM_mass, Ligand_mass, Apo_Holo_menu, Neutral_loss_menu, PPM_error
+        
 
         def file_read(file):
+
             with file as f:
                 for l in f:
-                    if l.startswith("Mass"):
+                    if l.startswith("Mass") or l.startswith('mass'): 
                         columns = l.split(',')
                         new_columns = []
                         for x in columns:
                              new_columns.append(x.strip())
                         break
+                    
+                capitalized = [word.capitalize() for word in new_columns]
                 deconvoluted_masses = pd.read_csv(
-                    file, float_precision=None, names=new_columns)
+                    file, float_precision=None, names=capitalized)
+                
             deconvoluted_masses = deconvoluted_masses.sort_values(
                 'Intensity', ascending=False).drop_duplicates('Mass').sort_index()
-
+            
             return deconvoluted_masses
 
         # Code to run above functions on button press
 
         def execute():
-
+            
             # Get variables from app entry boxes
             seq, tic2, activation, PTM_position, PTM_mass, Ligand_mass, Apo_Holo_menu, Neutral_loss_menu, PPM_error = get_variables()
             if PTM_position != '':
@@ -1042,13 +1163,12 @@ class StartPage(tk.Frame):
 
             
             # Open File
-            file = open(filename, 'r')
+            file = open(filename, 'r', encoding='utf-8-sig')
             global protein_sequence
             protein_sequence = ''.join(re.split(r"\s", seq))
 
             # Read in deconvoluted mass list, remove duplicates, keep highest intensity value
             deconvoluted_masses = file_read(file)
-
             # Define ion types in search according to activation entry (HCD,CID,ETD,EThcD,UVPD)
             ion_types = user_ions(activation)
 
@@ -1077,6 +1197,9 @@ class StartPage(tk.Frame):
             
             global theoretical_fragment_df
             theoretical_fragment_df = pd.DataFrame.from_dict(theoretical_fragments)
+
+            global neutral_loss_fragment_df
+            neutral_loss_fragment_df = pd.DataFrame.from_dict(neutral_loss_fragments)
 
             # Match fragments
             global matching_fragments
@@ -1109,9 +1232,6 @@ class StartPage(tk.Frame):
             matching_fragments['O'] = O
             matching_fragments['N'] = N
             matching_fragments['S'] = S
-            
-            
-
             
             # Format table for display
             matching_fragments.rename(columns={'TIC adjusted': 'TIC adjusted Intensity', 
@@ -1161,15 +1281,15 @@ class StartPage(tk.Frame):
                 {'Relative Ion Number': [x for x in range(1, len(protein_sequence))]})
 
             tidy_table = tidy_table.merge(protein_len, on='Relative Ion Number', how='right').fillna(0)
-            fragment_types = ['a','a-NH3','a+1','b','b-NH3','b-H2O','b+H2O','c', 'x','x+1','y','y-NH3','y-H2O','y-1','y-2','z']
+            fragment_types = ['a', 'a+1', 'b', 'c', 'x','x+1','y','y-1','y-2','z']
             for i in fragment_types:
                 if i not in tidy_table:
                     tidy_table[i] = 0
-            tidy_table = tidy_table[['Relative Ion Number', 'a','a-NH3','a+1','b','b-NH3','b-H2O','b+H2O','c', 'x','x+1','y','y-NH3','y-H2O','y-1','y-2','z']]
+            tidy_table = tidy_table[['Relative Ion Number', 'a', 'a+1', 'b', 'c', 'x','x+1','y','y-1','y-2','z']]
             
             # Format tidy table for display
-            format_mapping = {'a': '{:.2e}', 'a-NH3': '{:.2e}','a+1': '{:.2e}', 'b': '{:.2e}','b-NH3':'{:.2e}','b-H2O':'{:.2e}','b+H2O':'{:.2e}', 'c': '{:.2e}',
-                              'x': '{:.2e}', 'x+1': '{:.2e}', 'y': '{:.2e}', 'y-NH3': '{:.2e}', 'y-H2O':'{:.2e}','y-1': '{:.2e}', 'y-2': '{:.2e}','z': '{:.2e}'}
+            format_mapping = {'a': '{:.2e}', 'a+1': '{:.2e}', 'b': '{:.2e}', 'c': '{:.2e}',
+                              'x': '{:.2e}', 'x+1': '{:.2e}', 'y': '{:.2e}', 'y-1': '{:.2e}', 'y-2': '{:.2e}','z': '{:.2e}'}
             for key, value in format_mapping.items():
                 tidy_table[key] = tidy_table[key].apply(value.format)
             
@@ -1185,6 +1305,7 @@ class StartPage(tk.Frame):
             config.apply_options(options, pt2)
             pt2.show()
             
+
             
             matching_fragments['ppm error'] = matching_fragments['ppm error'].astype(float)
             matching_fragments['Raw Intensity'] = matching_fragments['Raw Intensity'].astype(float)
@@ -1207,10 +1328,12 @@ class StartPage(tk.Frame):
         def graph_seq_coverage():
 
             # Sequence Coverage Plot
+            
             seq_fig = sequence_coverage_plot(
                 protein_sequence, matching_fragments)
             plot(seq_fig)
 
+            
         # Go button
         go_button = tk.Button(self, text='Go', command=execute,
                               bg='brown', fg='white', font=('helvetica', 12, 'bold'))
@@ -1232,6 +1355,7 @@ class StartPage(tk.Frame):
         graph2_button.grid(column=2, row=22, columnspan=2)
 
         # Graph Seq Coverage button
+
         graph3_button = tk.Button(self, text='Graph Sequence Coverage',
                                   command=graph_seq_coverage, bg='brown',
                                   fg='white', font=('helvetica', 9, 'bold'))
